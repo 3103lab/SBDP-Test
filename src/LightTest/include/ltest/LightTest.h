@@ -140,10 +140,10 @@ namespace ltest {
         if (!m_vecFailure.empty()) {
             std::printf("\n-- failures (%zu) --\n", m_vecFailure.size());
             for (const auto& stFailure : m_vecFailure) {
-                std::printf("[%s] %s:%ld\n  expr: %s\n  msg : %s\n",
+                std::printf("[%s] %s:%d\n  expr: %s\n  msg : %s\n",
                     stFailure.strTestName.c_str(),
                     stFailure.strFile.c_str(),
-                    stFailure.snLine,
+                    (int)stFailure.snLine,
                     stFailure.strExpr.c_str(),
                     stFailure.strMessage.c_str()
                 );

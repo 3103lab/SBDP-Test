@@ -218,3 +218,151 @@ LTEST_DEFINE_TEST(TestSocketRecvTimeout)
 
     sbdp::CleanupSockets();
 }
+
+LTEST_DEFINE_TEST(TestSocketAcceptShutdown)
+{
+    LTEST_EXPECT_TRUE(sbdp::InitSockets());
+
+    const unsigned short unPort = NextTestPort();
+    std::atomic<bool> bServerReady{ false };
+    bool bCanceled = false;
+
+    sbdp::Socket cListen{};
+    std::thread thServer([&]() {
+        LTEST_EXPECT_TRUE(cListen.Create());
+        LTEST_EXPECT_TRUE(cListen.Bind(unPort));
+        LTEST_EXPECT_TRUE(cListen.Listen());
+        bServerReady = true;
+
+        try {
+            sbdp::Socket cClient = cListen.Accept();
+        }
+        catch (const std::system_error& e) {
+            bCanceled = (e.code() == std::errc::operation_canceled);
+        }
+        catch (...) {
+            bCanceled = false;
+        }
+    });
+
+    while (!bServerReady.load()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+    cListen.Shutdown();
+    cListen.Close();
+
+    thServer.join();
+    LTEST_EXPECT_TRUE(bCanceled);
+
+    sbdp::CleanupSockets();
+}
+
+LTEST_DEFINE_TEST(TestSocketRecvServerShutdown)
+{
+    LTEST_EXPECT_TRUE(sbdp::InitSockets());
+
+    const unsigned short unPort = NextTestPort();
+    std::atomic<bool> bServerReady{ false };
+    std::atomic<bool> bClientReady{ false };
+	bool bReceivedCanceled = false;
+    sbdp::Socket cListen{};
+    std::thread thServer([&]() {
+        LTEST_EXPECT_TRUE(cListen.Create());
+        LTEST_EXPECT_TRUE(cListen.Bind(unPort));
+        LTEST_EXPECT_TRUE(cListen.Listen());
+        bServerReady.store(true);
+
+        sbdp::Socket cClient = cListen.Accept();
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+        cClient.Close();
+        });
+
+    sbdp::Socket cClient{};
+    std::thread thClient([&]() {
+        
+        LTEST_EXPECT_TRUE(cClient.Create());
+        LTEST_EXPECT_TRUE(cClient.Connect("127.0.0.1", unPort));
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		bClientReady.store(true);
+        try {
+            (void)cClient.RecvMessage(50);
+        }
+        catch (const std::system_error& e) {
+            bReceivedCanceled = true;
+        }
+        catch (...) {
+            bReceivedCanceled = false;
+        }
+        });
+
+    while (!bServerReady.load() || !bClientReady.load()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+    cListen.Shutdown();
+
+    thServer.join();
+    thClient.join();
+
+    cListen.Close();
+    cClient.Shutdown();
+    cClient.Close();
+    LTEST_EXPECT_TRUE(bReceivedCanceled);
+
+    sbdp::CleanupSockets();
+}
+
+LTEST_DEFINE_TEST(TestSocketRecvClientShutdown)
+{
+    LTEST_EXPECT_TRUE(sbdp::InitSockets());
+
+    const unsigned short unPort = NextTestPort();
+    std::atomic<bool> bServerReady{ false };
+    std::atomic<bool> bClientReady{ false };
+    bool bReceivedCanceled = false;
+    sbdp::Socket cListen{};
+    std::thread thServer([&]() {
+        LTEST_EXPECT_TRUE(cListen.Create());
+        LTEST_EXPECT_TRUE(cListen.Bind(unPort));
+        LTEST_EXPECT_TRUE(cListen.Listen());
+        bServerReady.store(true);
+
+        sbdp::Socket cClient = cListen.Accept();
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+        cClient.Close();
+        });
+
+    sbdp::Socket cClient{};
+    std::thread thClient([&]() {
+
+        LTEST_EXPECT_TRUE(cClient.Create());
+        LTEST_EXPECT_TRUE(cClient.Connect("127.0.0.1", unPort));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        bClientReady.store(true);
+        try {
+            (void)cClient.RecvMessage(50);
+        }
+        catch (const std::system_error& e) {
+            bReceivedCanceled = true;
+        }
+        catch (...) {
+            bReceivedCanceled = false;
+        }
+        });
+
+    while (!bServerReady.load() || !bClientReady.load()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+    cClient.Shutdown();
+    cClient.Close();
+
+    thServer.join();
+    thClient.join();
+
+    cListen.Shutdown();
+    cListen.Close();
+
+
+    LTEST_EXPECT_TRUE(bReceivedCanceled);
+
+    sbdp::CleanupSockets();
+}
