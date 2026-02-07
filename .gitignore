@@ -1,0 +1,87 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# --- C++ build outputs ---
+*.o
+*.obj
+*.so
+*.dll
+*.dylib
+*.exe
+*.out
+*.a
+*.lib
+*.exp
+*.pdb
+*.idb
+
+# --- Build directories ---
+/Debug/
+/Release/
+/src/**/x64/
+
+# --- Empty directories ---
+/bin/*
+!/bin/.gitkeep
+/log/*
+!/log/.gitkeep
+/ini/*
+!/ini/.gitkeep
+
+
+# --- IDE specific ---
+# VSCode
+.vscode/
+# CLion
+.idea/
+# Visual Studio (User-specific files only)
+/src/.vs/
+*.vcxproj.user
+*.user
+*.suo
+*.ncb
+*.opensdf
+*.sdf
+*.cache
+*.db
+
+# --- OS generated ---
+.DS_Store
+Thumbs.db
+
+# --- Logs and temporary files ---
+*.log
+*.tmp
+*.bak
+*.swp
+*.~

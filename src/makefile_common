@@ -1,0 +1,11 @@
+# Compiler and Archiver
+CC = g++
+AR = ar
+LD = ld
+
+#CFLAGS = -g -Wall -O0 -DLINIX -lstdc++ -std=c++20 -fsanitize=address
+#LDFLAGS = -fsanitize=address
+
+# Base Compile Option
+CFLAGS = -g -Wall -O0 -DLINIX -lstdc++ -std=c++20
+RM = rm -f
